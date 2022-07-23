@@ -8,22 +8,21 @@ import (
 )
 
 type FileStruct struct {
-	FileName string
-	FileSize int
+	FileName    string
+	FileSize    int
 	FileContent []byte
 }
 
-
-func CheckExistence(fileName string)(bool){
-	if _, err := os.Stat(fileName); err != nil{
-		if os.IsNotExist(err){
+func CheckExistence(fileName string) bool {
+	if _, err := os.Stat(fileName); err != nil {
+		if os.IsNotExist(err) {
 			return false
 		}
 	}
 	return true
 }
 
-func ReadFileContents(connection net.Conn)(err error){
+func ReadFileContents(connection net.Conn) (err error) {
 
 	decoder := gob.NewDecoder(connection)
 
@@ -32,7 +31,7 @@ func ReadFileContents(connection net.Conn)(err error){
 	err = decoder.Decode(fs)
 
 	file, err := os.Create(fs.FileName)
-	if err != nil{
+	if err != nil {
 		fmt.Println("[+] Unable to create file")
 	}
 
@@ -40,27 +39,21 @@ func ReadFileContents(connection net.Conn)(err error){
 
 	nbytes, err := file.Write(fs.FileContent)
 
-	if err != nil{
+	if err != nil {
 		fmt.Println("[-] Unable to Write file")
-	}else{
+	} else {
 		fmt.Println("[+] Number of bytes Written ", nbytes)
 	}
 
 	var status string
 
-	if CheckExistence(fs.FileName){
+	if CheckExistence(fs.FileName) {
 		status = "[+] Successfully written File"
-	}else{
+	} else {
 		status = "[-] Unable to write file to the victim"
 	}
+	err = file.Close()
 
-	connection.Write([]byte(status+ "\n"))
-
-
-
-
-
-
-
+	connection.Write([]byte(status + "\n"))
 	return
 }

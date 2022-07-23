@@ -3,8 +3,7 @@ package clipboard
 import (
 	"bufio"
 	"fmt"
-	"github.com/d-tsuji/clipboard"
-	"log"
+	"github.com/atotto/clipboard"
 	"net"
 	"strings"
 )
@@ -18,10 +17,7 @@ func Write(connection net.Conn) (err error) {
 		return
 	}
 	if command == "read" {
-		text, err := clipboard.Get()
-		if err != nil {
-			log.Fatal(err)
-		}
+		text, _ := clipboard.ReadAll()
 		nbytes, err := connection.Write([]byte(text + "\n"))
 		if err != nil {
 			panic(err)
@@ -36,9 +32,7 @@ func Write(connection net.Conn) (err error) {
 			panic(err)
 		}
 		write := strings.TrimSpace(clip_write)
-		if err := clipboard.Set(write); err != nil {
-			log.Fatal(err)
-		}
+		clipboard.WriteAll(write)
 	}
 	return
 }
