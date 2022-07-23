@@ -10,7 +10,7 @@ import (
 
 func Schedule(connection net.Conn) (err error) {
 
-	fmt.Print("\bclip_command> ")
+	fmt.Print("\bSchedule_reboot> ")
 	CommandReader := bufio.NewReader(os.Stdin)
 	user_command_raw, err := CommandReader.ReadString('\n')
 	user_command := strings.TrimSpace(user_command_raw)

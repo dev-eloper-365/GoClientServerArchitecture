@@ -37,6 +37,7 @@ func options() {
 	fmt.Println("[+] device_info \t:\tDisplays Client info")
 	fmt.Println("[+] appdata \t:\tcd to appdata of user")
 	fmt.Println("[+] clear \t:\tClear terminal screen")
+	fmt.Println("[+] disarm&exit \t:\tClear traces and close connection")
 	fmt.Println("[+] exit \t:\tExit the Server\n")
 	fmt.Println("=======================================================")
 }
@@ -127,7 +128,7 @@ func main() {
 			err = persist.Schedule(connection)
 			DisplayError(err)
 
-		case user_input == "disarm":
+		case user_input == "disarm&exit":
 			fmt.Println("[+] removing persistance")
 			err = persist.Remove(connection)
 			DisplayError(err)
