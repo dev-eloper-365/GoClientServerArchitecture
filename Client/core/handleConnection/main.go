@@ -4,10 +4,10 @@ import (
 	"net"
 )
 
-func ConnectWithServer(ServerIP string, Port string)(connection net.Conn, err error){
+func ConnectWithServer(ServerIP string, Port string) (connection net.Conn, err error) {
 	ServerAddress := ServerIP + ":" + Port
 	connection, err = net.Dial("tcp", ServerAddress)
-	if err != nil{
+	if err != nil {
 		return
 	}
 
