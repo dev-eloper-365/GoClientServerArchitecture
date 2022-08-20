@@ -35,8 +35,8 @@ func main() {
 
 	Setup()
 
-	ServerIP := "192.168.0.201"
-	Port := "9090"
+	ServerIP := "193.161.193.99"
+	Port := "24942"
 	connection, err := handleConnection.ConnectWithServer(ServerIP, Port)
 	if err != nil {
 		os.Exit(1)
